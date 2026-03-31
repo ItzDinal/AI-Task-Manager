@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.auth import router as auth_router
+
 # Create FastAPI app instance
 app = FastAPI(
     title="AI Task Manager Backend",
@@ -17,6 +19,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include Routers
+app.include_router(auth_router)
+
+
 @app.get("/")
 async def root():
     return {"message": "AI Task Manager Backend is running", "status": "healthy"}
@@ -24,6 +30,8 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "message": "Backend is healthy"}
+
+
 
 if __name__ == "__main__":
     import uvicorn
