@@ -62,10 +62,4 @@ class User(BaseModel):
         nullable=False
     )
 
-    # Future relationship (Tasks)
-    tasks: Mapped[List["Task"]] = relationship(
-        "Task",
-        back_populates="owner",
-        cascade="all, delete-orphan",
-        lazy="selectin"
-    )
+    

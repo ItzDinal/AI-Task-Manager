@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 10
     DATABASE_ECHO: bool = False
+    SECRET_KEY: str
+    ALGORITHM: str
 
     ENV: str = "development"
 

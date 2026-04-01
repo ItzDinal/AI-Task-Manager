@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.db.base import BaseModel
+from app.db.session import engine
 
 from app.api.v1.auth import router as auth_router
 
@@ -31,7 +33,10 @@ async def root():
 async def health_check():
     return {"status": "ok", "message": "Backend is healthy"}
 
-
+@app.on_event("startup")
+async def create_tables():
+    async with engine.begin() as conn:
+        await conn.run_sync(BaseModel.metadata.create_all)
 
 if __name__ == "__main__":
     import uvicorn
