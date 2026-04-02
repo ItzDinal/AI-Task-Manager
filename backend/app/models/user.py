@@ -62,4 +62,4 @@ class User(BaseModel):
         nullable=False
     )
 
-    
+    tasks = relationship("Task", back_populates="user", cascade="all, delete")
