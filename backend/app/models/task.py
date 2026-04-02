@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, Enum
+from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, Enum, Integer, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -49,6 +49,17 @@ class Task(BaseModel):
         nullable=True
     )  # minutes
 
+    # AI / Scheduling Fields
+
+    # Calculated numeric score
+    priority_score: Mapped[int] = mapped_column(Integer, default=0)
+
+    # When task is scheduled
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Optional explicit completion flag (can derive from status too)
+    completed: Mapped[bool] = mapped_column(Boolean, default=False)
+
     # 🔐 CRITICAL: User ownership
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -58,3 +69,5 @@ class Task(BaseModel):
 
     # Relationship
     user = relationship("User", back_populates="tasks")
+
+    
