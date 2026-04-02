@@ -9,13 +9,13 @@ from uuid import UUID
 from app.db.session import get_db
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.services import task_service
-from app.api.deps import get_current_user
+from app.api.dependencies import get_current_user
 from app.models.user import User
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
-@router.post("/", response_model=TaskResponse)
+@router.post("", response_model=TaskResponse)
 async def create_task(
     task: TaskCreate,
     db: AsyncSession = Depends(get_db),
@@ -24,7 +24,7 @@ async def create_task(
     return await task_service.create_task(db, task, current_user.id)
 
 
-@router.get("/", response_model=list[TaskResponse])
+@router.get("", response_model=list[TaskResponse])
 async def get_tasks(
     status: Optional[str] = None,
     priority: Optional[str] = None,

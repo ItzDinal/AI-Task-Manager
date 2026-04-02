@@ -14,19 +14,19 @@ async def get_current_user(
         db: AsyncSession = Depends(get_db)
 ):
     # Decode Token
-    playload = decode_access_token(token)
+    payload = decode_access_token(token)
 
-    if playload is None:
+    if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
         )
-    user_id = playload.get("sub")
+    user_id = payload.get("sub")
 
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token playload"
+            detail="Invalid token payload"
         )
     # Fetch user from DB
     result = await db.execute(select(User).where(User.id == user_id))
@@ -37,4 +37,4 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found"
         )
-    return users
+    return user

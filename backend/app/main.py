@@ -8,6 +8,8 @@ from app.db.session import engine
 from app.models import user
 
 from app.api.v1.auth import router as auth_router
+from app.api.schedule_routes import router as schedule_router
+from app.api.task_routes import router as task_router
 
 # Create FastAPI app instance
 app = FastAPI(
@@ -27,7 +29,8 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(auth_router)
-
+app.include_router(schedule_router)
+app.include_router(task_router)
 
 @app.get("/")
 async def root():
