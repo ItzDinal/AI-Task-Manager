@@ -3,8 +3,9 @@
 from fastapi import APIRouter, Depends
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+from typing import Optional, Literal
 from uuid import UUID
+from datetime import datetime
 
 from app.db.session import get_db
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
@@ -15,7 +16,7 @@ from app.models.user import User
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
-@router.post("", response_model=TaskResponse)
+@router.post("", response_model=TaskResponse, status_code=201)
 async def create_task(
     task: TaskCreate,
     db: AsyncSession = Depends(get_db),
@@ -28,12 +29,12 @@ async def create_task(
 async def get_tasks(
     status: Optional[str] = None,
     priority: Optional[str] = None,
-    due_before: Optional[str] = None,
-    due_after: Optional[str] = None,
-    sort_by: Optional[str] = "created_at",
-    order: Optional[str] = "desc",
-    limit: int = Query(10, le=100),
-    offset: int = 0,
+    due_before: datetime | None = None,
+    due_after: datetime | None = None,
+    sort_by: Optional[str] = "priority_score",
+    order: Literal["asc", "desc"] = "desc",
+    limit: int = Query(10, ge=1 ,le=100),
+    offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -60,7 +61,7 @@ async def get_task(
     return await task_service.get_task(db, task_id, current_user.id)
 
 
-@router.put("/{task_id}", response_model=TaskResponse)
+@router.patch("/{task_id}", response_model=TaskResponse)
 async def update_task(
     task_id: UUID,
     task: TaskUpdate,
@@ -75,7 +76,7 @@ async def update_task(
     )
 
 
-@router.delete("/{task_id}")
+@router.delete("/{task_id}", status_code=204)
 async def delete_task(
     task_id: UUID,
     db: AsyncSession = Depends(get_db),

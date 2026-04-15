@@ -4,7 +4,17 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, Enum, Integer, Boolean
+from sqlalchemy import (
+    String, 
+    Text, 
+    DateTime, 
+    ForeignKey, 
+    Integer, 
+    Enum, 
+    CheckConstraint, 
+    Boolean
+)
+
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,40 +44,61 @@ class Task(BaseModel):
 
     status: Mapped[str] = mapped_column(
         Enum(*ALLOWED_STATUSES, name="task_status"),
-        default=STATUS_PENDING
+        default=STATUS_PENDING,
+        nullable=False,
+        index=True
     )
 
     priority: Mapped[str] = mapped_column(
         String(50),
-        default="medium"
+        default="medium",
+        nullable=False
     )
 
-    due_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    priority_score: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False
+    )
+
+    # ---------------------------
+    # TIME & SCHEDULING
+    # ---------------------------
+    due_date: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, 
+        nullable=True,
+        index=True)
 
     estimated_time: Mapped[Optional[int]] = mapped_column(
         Integer,
         nullable=True
     )  # minutes
 
-    # AI / Scheduling Fields
-
-    # Calculated numeric score
-    priority_score: Mapped[int] = mapped_column(Integer, default=0)
-
-    # When task is scheduled
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-
-    # Optional explicit completion flag (can derive from status too)
-    completed: Mapped[bool] = mapped_column(Boolean, default=False)
-
-    # 🔐 CRITICAL: User ownership
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id"),
-        nullable=False
+    scheduled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True
     )
 
-    # Relationship
+    # ---------------------------
+    # 🔐 USER OWNERSHIP (CRITICAL)
+    # ---------------------------
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+     # Relationship
     user = relationship("User", back_populates="tasks")
 
+     # ---------------------------
+    # CONSTRAINTS (DATA SAFETY)
+    # ---------------------------
+    __table_args__ = (
+        CheckConstraint(
+            "estimated_time >= 0",
+            name="check_estimated_time_positive"
+        ),
+    )
     

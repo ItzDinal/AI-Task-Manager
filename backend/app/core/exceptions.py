@@ -11,3 +11,13 @@ class DuplicateEntryError(DatabaseError):
 class DatabaseConnectionError(DatabaseError):
     """Raised when DB connection fails."""
     pass
+
+
+class NotFoundError(Exception):
+    pass
+
+class ForbiddenError(Exception):
+    pass
+
+class ValidationError(Exception):
+    pass

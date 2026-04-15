@@ -15,12 +15,12 @@ class UserResponse(BaseModel):
     email: EmailStr
     username: str
 
-    class config: 
+    class Config: 
         from_attributes = True
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-class TOkenData(BaseModel):
+class TokenData(BaseModel):
     sub: str | None = None
