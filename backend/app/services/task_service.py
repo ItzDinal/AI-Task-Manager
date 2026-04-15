@@ -177,3 +177,52 @@ def validate_status_transition(current_status: str, new_status: str):
         raise ValidationError(
             f"Cannot change status from {current_status} to {new_status}"
         )
+# ---------------------------
+# Date Time Planner (AI)
+# ---------------------------
+def get_daily_plan(
+        db: Session,
+        user_id: int,
+        limit: int=5
+) -> List[dict]:
+
+    # 1. Get active task (not completed)
+    tasks = db.query(Task).filter(
+        Task.user_id == user_id,
+        Task.status != "completed"
+    ).all()
+
+    results = []
+    now = datetime.utcnow()
+
+    for task in tasks:
+        # 2. Base Score
+        base_score = task.priority_score or 0
+
+        # 3. Urgency bonus
+        urgency_bonus = 0 
+
+        if task.due_date:
+            days_left = (task.due_date - now).days
+
+            if days_left < 0:
+                urgency_bonus = 70 # overdue
+            elif days_left == 0:
+                urgency_bonus = 50 # today
+            elif days_left <= 2:
+                urgency_bonus = 30 # soon
+
+        # 4. Final Score
+        final_score = base_score + urgency_bonus
+
+        results.append({
+            "task": task,
+            "final_score": final_score
+        })
+    # 5. Sort by AI score
+    results.sort(key=lambda x: x["fina_score"], reverse=True)
+
+    # 6. Return top N tasks
+    top_tasks = [item[task]for item in results[:limit]]
+
+    return top_tasks
