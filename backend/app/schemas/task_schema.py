@@ -66,3 +66,26 @@ class TaskResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+# ---------------------------
+# 📅 DAILY PLANNER RESPONSE
+# ---------------------------
+class DailyTaskResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+    description: Optional[str]
+
+    priority: str
+    status: str
+
+    due_date: Optional[datetime]
+    estimated_time: Optional[int]
+
+    priority_score: int
+
+    final_score: int
+    urgency: str
+
+    model_config = {
+        "from_attributes": True
+    }
