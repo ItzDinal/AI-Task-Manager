@@ -12,6 +12,8 @@ from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.services import task_service
 from app.api.dependencies import get_current_user
 from app.models.user import User
+from app.schemas.task_schema import DailyTaskResponse
+
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
@@ -82,8 +84,39 @@ async def delete_task(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return await task_service.delete_task(
+    return task_service.delete_task(
         db,
         task_id,
         current_user.id
     )
+
+@router.get("/daily-plan", response_model=list[DailyTaskResponse])
+async def get_daily_plan(
+    limit: int = Query(5, ge=1,  le=10),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = task_service.get_daily_plan(
+        db=db,
+        user_id=current_user.id,
+        limit=limit
+    )
+
+    response = []
+
+    for item in result:
+        task = item["task"]
+
+        response.append(DailyTaskResponse(
+            id=task.id,
+            title=task.title,
+            description=task.descripton,
+            priority=task.status,
+            due_date=task.due_date,
+            estimated_time=task.estimated_time,
+            priority_score=task.priority_score,
+            final_score=item["final_score"],
+            urgency=item["urgency"]
+        ))
+
+    return response
