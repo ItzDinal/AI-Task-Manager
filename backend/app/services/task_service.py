@@ -375,3 +375,100 @@ def generate_schedule(
         "scheduled": schedule,
         "skipped": skipped_tasks
     }
+
+def get_focus_task(
+    db: Session,
+    user_id: int
+):
+    schedule_data = generate_schedule(db, user_id)
+
+    scheduled = schedule_data["scheduled"]
+
+    if not scheduled:
+        return None
+
+    now = datetime.utcnow()
+
+    current_task = None
+    next_task = None
+
+    for item in scheduled:
+        start = item["start_time"]
+        end = item["end_time"]
+
+        # 🧠 Case 1 — current task
+        if start <= now <= end:
+            current_task = item
+            break
+
+        # 🧠 Case 2 — next task
+        if start > now and next_task is None:
+            next_task = item
+
+    chosen = current_task or next_task
+
+    if not chosen:
+        return None
+
+    task = chosen["task"]
+
+    # ---------------------------
+    # 🧠 Generate reason
+    # ---------------------------
+    reason_parts = []
+
+    if "overdue" in chosen["urgency"]:
+        reason_parts.append("Overdue task")
+
+    elif chosen["urgency"] == "due_today":
+        reason_parts.append("Due today")
+
+    if chosen["final_score"] > 80:
+        reason_parts.append("High priority")
+
+    reason = " + ".join(reason_parts) or "Next best task"
+
+    return {
+        "task": task,
+        "start_time": chosen["start_time"],
+        "end_time": chosen["end_time"],
+        "reason": reason
+    }
+
+def get_missed_tasks(
+    db: Session,
+    user_id: int
+):
+    now = datetime.utcnow()
+
+    tasks = db.query(Task).filter(
+        Task.user_id == user_id,
+        Task.status != "completed"
+    ).all()
+
+    missed = []
+
+    for task in tasks:
+        if task.due_date and task.due_date < now:
+            missed.append(task)
+
+    return missed
+
+def replan_day(
+    db: Session,
+    user_id: int
+):
+    # 1. Get missed tasks
+    missed_tasks = get_missed_tasks(db, user_id)
+
+    # 2. Boost missed tasks priority
+    for task in missed_tasks:
+        task.priority_score += 50  # 🔥 boost
+
+    # 3. Rebuild schedule
+    new_schedule = generate_schedule(db, user_id)
+
+    return {
+        "message": "Schedule updated based on missed tasks",
+        "schedule": new_schedule
+    }
