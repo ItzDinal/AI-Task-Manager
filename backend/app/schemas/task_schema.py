@@ -1,5 +1,4 @@
 # app/schemas/task_schema.py
-
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -83,6 +82,24 @@ class DailyTaskResponse(BaseModel):
 
     priority_score: int
 
+    final_score: int
+    urgency: str
+
+    model_config = {
+        "from_attributes": True
+    }
+
+# ---------------------------
+# ⏱️ SCHEDULE RESPONSE
+# ---------------------------
+class ScheduleTaskResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+
+    start_time: datetime
+    end_time: datetime
+
+    priority_score: int
     final_score: int
     urgency: str
 
