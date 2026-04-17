@@ -208,8 +208,21 @@ def get_daily_plan(
             days_left = (task.due_date - now).days
 
             if days_left < 0:
-                urgency_bonus = 70 # overdue
-                urgency_label = "Overdue"
+                overdue_days = (task.due_date - now).days
+
+                if overdue_days == 1:
+                    urgency_bonus = 70
+                    urgency_label = "overdue"
+
+                elif overdue_days <=3:
+                    urgency_bonus = 90
+                    urgency_label = "overdue_high"
+
+                else: 
+                    urgency_bonus = 120
+                    urgency_label = "overdue_critical"
+            
+
             elif days_left == 0:
                 urgency_bonus = 50 # today
                 urgency_label = "due_today"
@@ -235,46 +248,130 @@ def get_daily_plan(
 
     return top_tasks
 
-# ---------------------------
-# ⏱️ TIME ALLOCATION ENGINE
-# ---------------------------
+DAILY_CAPACITY_MINUTES = 6 * 60
+
+
 def generate_schedule(
     db: Session,
     user_id: int,
-    limit: int = 5
+    limit: int = 10
 ):
-
-    # 1. Get AI-selected tasks
+    # ---------------------------
+    # 1. Get AI tasks
+    # ---------------------------
     daily_tasks = get_daily_plan(db, user_id, limit)
 
-    # 2. Define working hours
-    start_time = datetime.utcnow().replace(hour=9, minute=0, second=0, microsecond=0)
-    end_time = datetime.utcnow().replace(hour=21, minute=0, second=0, microsecond=0)
-
-    current_time = start_time
-    schedule = []
+    candidates = []
 
     for item in daily_tasks:
         task = item["task"]
 
-        # Default duration = 30 mins if not set
-        duration_minutes = task.estimated_time or 30
+        duration = task.estimated_time or 30
+        score = item["final_score"]
 
-        task_end_time = current_time + timedelta(minutes=duration_minutes)
+        ratio = score / duration if duration > 0 else 0
 
-        # Stop if exceeds day limit
-        if task_end_time > end_time:
+        candidates.append({
+            "task": task,
+            "duration": duration,
+            "score": score,
+            "ratio": ratio,
+            "urgency": item["urgency"]
+        })
+
+    # ---------------------------
+    # 🧠 Split overdue vs normal
+    # ---------------------------
+    overdue_tasks = []
+    normal_tasks = []
+
+    for item in candidates:
+        if "overdue" in item["urgency"]:
+            overdue_tasks.append(item)
+        else:
+            normal_tasks.append(item)
+
+    # Sort normal tasks by greedy ratio
+    normal_tasks.sort(key=lambda x: x["ratio"], reverse=True)
+
+    selected = []
+    skipped = []
+
+    total_time = 0
+
+    # ---------------------------
+    # 🔥 STEP 1 — FORCE INCLUDE OVERDUE
+    # ---------------------------
+    for item in overdue_tasks:
+        if total_time + item["duration"] <= DAILY_CAPACITY_MINUTES:
+            selected.append(item)
+            total_time += item["duration"]
+        else:
+            skipped.append(item)
+
+    # ---------------------------
+    # 🔥 STEP 2 — GREEDY NORMAL TASKS
+    # ---------------------------
+    for item in normal_tasks:
+        if total_time + item["duration"] <= DAILY_CAPACITY_MINUTES:
+            selected.append(item)
+            total_time += item["duration"]
+        else:
+            skipped.append(item)
+
+    # ---------------------------
+    # ⏱️ STEP 3 — TIME SCHEDULING
+    # ---------------------------
+    start_time = datetime.utcnow().replace(
+        hour=9, minute=0, second=0, microsecond=0
+    )
+
+    end_time_limit = datetime.utcnow().replace(
+        hour=21, minute=0, second=0, microsecond=0
+    )
+
+    current_time = start_time
+    schedule = []
+
+    for item in selected:
+        task = item["task"]
+
+        task_end_time = current_time + timedelta(minutes=item["duration"])
+
+        if task_end_time > end_time_limit:
             break
 
         schedule.append({
             "task": task,
             "start_time": current_time,
             "end_time": task_end_time,
-            "final_score": item["final_score"],
+            "final_score": item["score"],
             "urgency": item["urgency"]
         })
 
-        # Move time forward
         current_time = task_end_time
 
-    return schedule
+    # ---------------------------
+    # 📢 STEP 4 — SKIPPED TASKS
+    # ---------------------------
+    skipped_tasks = []
+
+    for item in skipped:
+        reason = (
+            "Overdue but exceeds capacity"
+            if "overdue" in item["urgency"]
+            else "Not enough capacity (lower priority)"
+        )
+
+        skipped_tasks.append({
+            "task": item["task"],
+            "reason": reason
+        })
+
+    # ---------------------------
+    # 📊 FINAL RESPONSE
+    # ---------------------------
+    return {
+        "scheduled": schedule,
+        "skipped": skipped_tasks
+    }
