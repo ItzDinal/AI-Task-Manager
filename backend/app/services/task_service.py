@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, asc
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.models.task import Task
 from app.schemas.task_schema import TaskCreate, TaskUpdate
@@ -202,22 +202,30 @@ def get_daily_plan(
         # 3. Urgency bonus
         urgency_bonus = 0 
 
+        urgency_label = "none"
+
         if task.due_date:
             days_left = (task.due_date - now).days
 
             if days_left < 0:
                 urgency_bonus = 70 # overdue
+                urgency_label = "Overdue"
             elif days_left == 0:
                 urgency_bonus = 50 # today
+                urgency_label = "due_today"
+
             elif days_left <= 2:
                 urgency_bonus = 30 # soon
+                urgency_label = "due_soon"
+
 
         # 4. Final Score
         final_score = base_score + urgency_bonus
 
         results.append({
             "task": task,
-            "final_score": final_score
+            "final_score": final_score,
+            "urgency": urgency_label
         })
     # 5. Sort by AI score
     results.sort(key=lambda x: x["fina_score"], reverse=True)
@@ -226,3 +234,47 @@ def get_daily_plan(
     top_tasks = [item[task]for item in results[:limit]]
 
     return top_tasks
+
+# ---------------------------
+# ⏱️ TIME ALLOCATION ENGINE
+# ---------------------------
+def generate_schedule(
+    db: Session,
+    user_id: int,
+    limit: int = 5
+):
+
+    # 1. Get AI-selected tasks
+    daily_tasks = get_daily_plan(db, user_id, limit)
+
+    # 2. Define working hours
+    start_time = datetime.utcnow().replace(hour=9, minute=0, second=0, microsecond=0)
+    end_time = datetime.utcnow().replace(hour=21, minute=0, second=0, microsecond=0)
+
+    current_time = start_time
+    schedule = []
+
+    for item in daily_tasks:
+        task = item["task"]
+
+        # Default duration = 30 mins if not set
+        duration_minutes = task.estimated_time or 30
+
+        task_end_time = current_time + timedelta(minutes=duration_minutes)
+
+        # Stop if exceeds day limit
+        if task_end_time > end_time:
+            break
+
+        schedule.append({
+            "task": task,
+            "start_time": current_time,
+            "end_time": task_end_time,
+            "final_score": item["final_score"],
+            "urgency": item["urgency"]
+        })
+
+        # Move time forward
+        current_time = task_end_time
+
+    return schedule
