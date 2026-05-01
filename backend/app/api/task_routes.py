@@ -84,7 +84,7 @@ async def delete_task(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return task_service.delete_task(
+    return await task_service.delete_task(
         db,
         task_id,
         current_user.id
@@ -96,7 +96,7 @@ async def get_daily_plan(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    result = task_service.get_daily_plan(
+    result = await task_service.get_daily_plan(
         db=db,
         user_id=current_user.id,
         limit=limit
@@ -105,18 +105,18 @@ async def get_daily_plan(
     response = []
 
     for item in result:
-        task = item["task"]
+        task = item
 
         response.append(DailyTaskResponse(
             id=task.id,
             title=task.title,
-            description=task.descripton,
-            priority=task.status,
+            description=task.description,
+            priority=task.priority,
             due_date=task.due_date,
             estimated_time=task.estimated_time,
             priority_score=task.priority_score,
-            final_score=item["final_score"],
-            urgency=item["urgency"]
+            final_score=50,
+            urgency="normal"
         ))
 
     return response
@@ -130,7 +130,7 @@ async def get_schedule(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    result = task_service.generate_schedule(
+    result = await task_service.generate_schedule(
         db=db,
         user_id=current_user.id,
         limit=limit

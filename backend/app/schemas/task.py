@@ -34,7 +34,6 @@ class TaskResponse(TaskBase):
     user_id: UUID
     priority_score: int
     scheduled_at: Optional[datetime] = None
-    completed: bool
 
     class Config:
         from_attributes = True

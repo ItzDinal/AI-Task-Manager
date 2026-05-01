@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,17 +9,13 @@ from app.db.session import get_db
 from app.models.user import User
 from app.core.security import decode_access_token
 
-# 🔐 OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-# 🔓 Get current authenticated user
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-
-    # ✅ FIXED: pass token
     payload = decode_access_token(token)
 
     if payload is None:
@@ -26,9 +24,18 @@ async def get_current_user(
             detail="Invalid or expired token"
         )
 
-    user_id = payload.get("user_id")  # 🔥 match your token creation
+    # Accept both standard and legacy claim keys.
+    user_id = payload.get("sub") or payload.get("user_id")
 
     if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
+    try:
+        user_id = uuid.UUID(str(user_id))
+    except (TypeError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload"

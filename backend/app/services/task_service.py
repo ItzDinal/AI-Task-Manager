@@ -1,9 +1,11 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, asc
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import desc, asc, select
 from typing import List, Optional
 from datetime import datetime, timedelta
 
 from app.models.task import Task
+from app.models.user import User
 from app.schemas.task_schema import TaskCreate, TaskUpdate
 from app.core.exceptions import NotFoundError, ForbiddenError, ValidationError
 
@@ -11,7 +13,7 @@ from app.core.exceptions import NotFoundError, ForbiddenError, ValidationError
 # ---------------------------
 # CREATE TASK
 # ---------------------------
-def create_task(db: Session, task_data: TaskCreate, user_id: int) -> Task:
+async def create_task(db: AsyncSession, task_data: TaskCreate, user_id) -> Task:
     new_task = Task(
         title=task_data.title,
         description=task_data.description,
@@ -24,10 +26,10 @@ def create_task(db: Session, task_data: TaskCreate, user_id: int) -> Task:
     db.add(new_task)
 
     try:
-        db.commit()
-        db.refresh(new_task)
+        await db.commit()
+        await db.refresh(new_task)
     except Exception:
-        db.rollback()
+        await db.rollback()
         raise
 
     return new_task
@@ -36,9 +38,9 @@ def create_task(db: Session, task_data: TaskCreate, user_id: int) -> Task:
 # ---------------------------
 # GET ALL TASKS (WITH FILTERS)
 # ---------------------------
-def get_tasks(
-    db: Session,
-    user_id: int,
+async def get_tasks(
+    db: AsyncSession,
+    user_id,
     status:Optional[str] = None,
     priority: Optional[str] = None,
     due_before: Optional[datetime] = None,
@@ -49,19 +51,19 @@ def get_tasks(
     offset: int = 0
 ) -> List[Task]:
 
-    query = db.query(Task).filter(Task.user_id == user_id)
+    query = select(Task).where(Task.user_id == user_id)
 
     if status:
-        query = query.filter(Task.status == status)
+        query = query.where(Task.status == status)
 
     if priority:
-        query = query.filter(Task.priority == priority)
+        query = query.where(Task.priority == priority)
 
     if due_before:
-        query = query.filter(Task.due_date <= due_before)
+        query = query.where(Task.due_date <= due_before)
 
     if due_after:
-        query = query.filter(Task.due_date >= due_after)
+        query = query.where(Task.due_date >= due_after)
 
     if sort_by == "priority_score":
         column = Task.priority_score
@@ -75,13 +77,14 @@ def get_tasks(
     else:
         raise ValidationError(f"Invalid sort field: {sort_by}")
     
-     # Apply order
+    # Apply order
     if order == "desc":
         query = query.order_by(desc(column))
     else:
         query = query.order_by(asc(column))
 
-    return query.offset(offset).limit(limit).all()
+    result = await db.execute(query.offset(offset).limit(limit))
+    return result.scalars().all()
 
     # # Safe sorting
     # allowed_sort_fields = {"created_at", "due_date", "priority"}
@@ -101,11 +104,13 @@ def get_tasks(
 # ---------------------------
 # GET SINGLE TASK (SECURE)
 # ---------------------------
-def get_task(db: Session, task_id: int, user_id: int) -> Task:
-    task = db.query(Task).filter(
-        Task.id == task_id,
-        Task.user_id == user_id
-    ).first()
+async def get_task(db: AsyncSession, task_id: int, user_id) -> Task:
+    result = await db.execute(
+        select(Task).where(
+            (Task.id == task_id) & (Task.user_id == user_id)
+        )
+    )
+    task = result.scalar_one_or_none()
 
     if not task:
         raise NotFoundError("Task not found")
@@ -116,14 +121,14 @@ def get_task(db: Session, task_id: int, user_id: int) -> Task:
 # ---------------------------
 # UPDATE TASK
 # ---------------------------
-def update_task(
-    db: Session,
+async def update_task(
+    db: AsyncSession,
     task_id: int,
     task_data: TaskUpdate,
-    user_id: int
+    user_id
 ) -> Task:
 
-    task = get_task(db, task_id, user_id)
+    task = await get_task(db, task_id, user_id)
 
     update_data = task_data.dict(exclude_unset=True)
 
@@ -134,10 +139,10 @@ def update_task(
         setattr(task, key, value)
 
     try:
-        db.commit()
-        db.refresh(task)
+        await db.commit()
+        await db.refresh(task)
     except Exception:
-        db.rollback()
+        await db.rollback()
         raise
 
     return task
@@ -146,15 +151,15 @@ def update_task(
 # ---------------------------
 # DELETE TASK
 # ---------------------------
-def delete_task(db: Session, task_id: int, user_id: int) -> None:
-    task = get_task(db, task_id, user_id)
+async def delete_task(db: AsyncSession, task_id: int, user_id) -> None:
+    task = await get_task(db, task_id, user_id)
 
-    db.delete(task)
+    await db.delete(task)
 
     try:
-        db.commit()
+        await db.commit()
     except Exception:
-        db.rollback()
+        await db.rollback()
         raise
 
 
@@ -180,17 +185,19 @@ def validate_status_transition(current_status: str, new_status: str):
 # ---------------------------
 # Date Time Planner (AI)
 # ---------------------------
-def get_daily_plan(
-        db: Session,
-        user_id: int,
+async def get_daily_plan(
+        db: AsyncSession,
+        user_id,
         limit: int=5
 ) -> List[dict]:
 
     # 1. Get active task (not completed)
-    tasks = db.query(Task).filter(
-        Task.user_id == user_id,
-        Task.status != "completed"
-    ).all()
+    result = await db.execute(
+        select(Task).where(
+            (Task.user_id == user_id) & (Task.status != "completed")
+        )
+    )
+    tasks = result.scalars().all()
 
     results = []
     now = datetime.utcnow()
@@ -241,33 +248,33 @@ def get_daily_plan(
             "urgency": urgency_label
         })
     # 5. Sort by AI score
-    results.sort(key=lambda x: x["fina_score"], reverse=True)
+    results.sort(key=lambda x: x["final_score"], reverse=True)
 
     # 6. Return top N tasks
-    top_tasks = [item[task]for item in results[:limit]]
+    top_tasks = [item["task"] for item in results[:limit]]
 
     return top_tasks
 
 DAILY_CAPACITY_MINUTES = 6 * 60
 
 
-def generate_schedule(
-    db: Session,
-    user_id: int,
+async def generate_schedule(
+    db: AsyncSession,
+    user_id,
     limit: int = 10
 ):
     # ---------------------------
     # 1. Get AI tasks
     # ---------------------------
-    daily_tasks = get_daily_plan(db, user_id, limit)
+    daily_tasks = await get_daily_plan(db, user_id, limit)
 
     candidates = []
 
-    for item in daily_tasks:
-        task = item["task"]
-
+    for task in daily_tasks:
         duration = task.estimated_time or 30
-        score = item["final_score"]
+
+        # Calculate a simple score based on priority
+        score = getattr(task, 'priority_score', 50)
 
         ratio = score / duration if duration > 0 else 0
 
@@ -276,7 +283,7 @@ def generate_schedule(
             "duration": duration,
             "score": score,
             "ratio": ratio,
-            "urgency": item["urgency"]
+            "urgency": "normal"
         })
 
     # ---------------------------
@@ -322,15 +329,16 @@ def generate_schedule(
     # ---------------------------
     # ⏱️ STEP 3 — TIME SCHEDULING
     # ---------------------------
-    user = db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
 
     now = datetime.utcnow()
 
-    start_hour = user.preferred_start_time.hour if user.preferred_start_time else 9
-    start_min = user.preferred_start_time.minute if user.preferred_start_time else 0
+    start_hour = user.preferred_start_time.hour if user and user.preferred_start_time else 9
+    start_min = user.preferred_start_time.minute if user and user.preferred_start_time else 0
 
-    end_hour = user.preferred_end_time.hour if user.preferred_end_time else 21
-    end_min = user.preferred_end_time.minute if user.preferred_end_time else 0
+    end_hour = user.preferred_end_time.hour if user and user.preferred_end_time else 21
+    end_min = user.preferred_end_time.minute if user and user.preferred_end_time else 0
 
     start_time = now.replace(
         hour=start_hour,
