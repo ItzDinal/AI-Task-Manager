@@ -1,7 +1,8 @@
 import uuid
+from datetime import time
 from typing import Optional, List
 
-from sqlalchemy import String, Boolean, Enum
+from sqlalchemy import String, Boolean, Enum, Time
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -62,4 +63,24 @@ class User(BaseModel):
         nullable=False
     )
 
-    tasks = relationship("Task", back_populates="user", cascade="all, delete")
+    # ---------------------------
+    # 🧠 TIME PREFERENCE (NEW)
+    # ---------------------------
+    preferred_start_time: Mapped[Optional[time]] = mapped_column(
+        Time,
+        nullable=True
+    )
+
+    preferred_end_time: Mapped[Optional[time]] = mapped_column(
+        Time,
+        nullable=True
+    )
+
+    # ---------------------------
+    # 🔗 RELATIONSHIPS
+    # ---------------------------
+    tasks: Mapped[List["Task"]] = relationship(
+        "Task",
+        back_populates="user",
+        cascade="all, delete"
+    )

@@ -106,3 +106,46 @@ class ScheduleTaskResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+# ---------------------------
+# ⏱️ SCHEDULE ITEM
+# ---------------------------
+class ScheduleItem(BaseModel):
+    id: uuid.UUID
+    title: str
+
+    start_time: datetime
+    end_time: datetime
+
+    priority_score: int
+    final_score: int
+    urgency: str
+
+
+# ---------------------------
+# ⚠️ SKIPPED ITEM
+# ---------------------------
+class SkippedItem(BaseModel):
+    id: uuid.UUID
+    title: str
+    reason: str
+
+
+# ---------------------------
+# 📊 FULL SCHEDULE RESPONSE
+# ---------------------------
+class ScheduleResponse(BaseModel):
+    scheduled: list[ScheduleItem]
+    skipped: list[SkippedItem]
+
+# ---------------------------
+# 🎯 FOCUS TASK RESPONSE
+# ---------------------------
+class FocusTaskResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+
+    start_time: datetime
+    end_time: datetime
+
+    reason: str

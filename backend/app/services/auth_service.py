@@ -50,3 +50,8 @@ def create_user_token(user: User):
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+async def get_all_users(db: AsyncSession):
+    result = await db.execute(select(User))
+    users = result.scalars().all()
+    return users

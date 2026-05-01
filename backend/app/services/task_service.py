@@ -322,12 +322,28 @@ def generate_schedule(
     # ---------------------------
     # ⏱️ STEP 3 — TIME SCHEDULING
     # ---------------------------
-    start_time = datetime.utcnow().replace(
-        hour=9, minute=0, second=0, microsecond=0
+    user = db.query(User).filter(User.id == user_id).first()
+
+    now = datetime.utcnow()
+
+    start_hour = user.preferred_start_time.hour if user.preferred_start_time else 9
+    start_min = user.preferred_start_time.minute if user.preferred_start_time else 0
+
+    end_hour = user.preferred_end_time.hour if user.preferred_end_time else 21
+    end_min = user.preferred_end_time.minute if user.preferred_end_time else 0
+
+    start_time = now.replace(
+        hour=start_hour,
+        minute=start_min,
+        second=0,
+        microsecond=0
     )
 
-    end_time_limit = datetime.utcnow().replace(
-        hour=21, minute=0, second=0, microsecond=0
+    end_time_limit = now.replace(
+        hour=end_hour,
+        minute=end_min,
+        second=0,
+        microsecond=0
     )
 
     current_time = start_time
