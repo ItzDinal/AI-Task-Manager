@@ -30,7 +30,7 @@ function MiniCalendar() {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 ease-in-out hover:shadow-md">
       <CalendarHeader monthLabel={monthLabel} onPrevMonth={handlePrevMonth} onNextMonth={handleNextMonth} />
 
       <CalendarGrid

@@ -8,7 +8,7 @@ import SuggestedTasks from "./SuggestedTasks.jsx";
 // Premium AI productivity assistant widget for focus and task clarity.
 function AIAssistantWidget() {
   return (
-    <section className="flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section className="flex flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 ease-in-out hover:shadow-md">
       <AIHeader />
       <AIInsightCard />
       <FocusRecommendation />

@@ -31,7 +31,7 @@ const upcomingTasks = [
 // Upcoming tasks side widget for quick task prioritization.
 function UpcomingTasks() {
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 ease-in-out hover:shadow-md">
       <WidgetHeader title="Upcoming Tasks" />
       <div className="flex flex-col gap-2">
         {upcomingTasks.map((task) => (

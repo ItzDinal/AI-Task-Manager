@@ -38,7 +38,7 @@ function TaskTable() {
   const hasTasks = tasks.length > 0;
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 ease-in-out hover:shadow-md sm:p-6">
       <div className="space-y-4">
         <TaskTableHeader />
         <TaskFilters />

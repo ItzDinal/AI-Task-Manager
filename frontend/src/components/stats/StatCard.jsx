@@ -4,7 +4,7 @@ import StatTrend from "./StatTrend.jsx";
 // Reusable metric card for dashboard productivity insights.
 function StatCard({ icon, tone, title, value, trend, trendText, subtitle }) {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md">
+    <article className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-200 ease-in-out motion-safe:transform-gpu motion-safe:hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <StatIcon icon={icon} tone={tone} />
         <StatTrend trend={trend} text={trendText} />

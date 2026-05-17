@@ -6,7 +6,7 @@ import UpcomingTasks from "../widgets/UpcomingTasks.jsx";
 // Right-side dashboard widget panel.
 function RightPanel() {
   return (
-    <aside className="min-h-[420px] space-y-4">
+    <aside className="min-w-0 space-y-4">
       <MiniCalendar />
       <UpcomingTasks />
       <TopPriorityTasks />

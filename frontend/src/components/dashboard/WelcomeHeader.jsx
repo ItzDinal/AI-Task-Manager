@@ -4,7 +4,7 @@ import GreetingSection from "./GreetingSection.jsx";
 // Dashboard welcome header to establish context and key actions.
 function WelcomeHeader() {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <GreetingSection />
         <ActionButtons />

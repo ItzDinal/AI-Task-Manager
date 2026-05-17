@@ -18,13 +18,19 @@ const navItems = [
 ];
 
 // Primary app navigation links.
-function SidebarNav() {
+function SidebarNav({ onItemClick }) {
   return (
     <section className="space-y-2">
       <p className="px-2 text-xs uppercase tracking-wide text-gray-400">Navigation</p>
       <div className="space-y-2">
         {navItems.map((item) => (
-          <SidebarNavItem key={`${item.label}-${item.to}`} to={item.to} icon={item.icon} label={item.label} />
+          <SidebarNavItem
+            key={`${item.label}-${item.to}`}
+            to={item.to}
+            icon={item.icon}
+            label={item.label}
+            onClick={onItemClick}
+          />
         ))}
       </div>
     </section>

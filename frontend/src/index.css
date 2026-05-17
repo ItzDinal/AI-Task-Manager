@@ -3,6 +3,55 @@
 body {
   background-color: #f9fafb;
   color: #111827;
+  overflow-x: hidden;
+}
+
+@keyframes aiPulse {
+  0%,
+  100% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes aiTyping {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
+.animate-ai-pulse {
+  animation: aiPulse 2s ease-in-out infinite;
+}
+
+.animate-ai-dot-1 {
+  animation: aiTyping 1.2s ease-in-out infinite;
+}
+
+.animate-ai-dot-2 {
+  animation: aiTyping 1.2s ease-in-out 0.15s infinite;
+}
+
+.animate-ai-dot-3 {
+  animation: aiTyping 1.2s ease-in-out 0.3s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ai-pulse,
+  .animate-ai-dot-1,
+  .animate-ai-dot-2,
+  .animate-ai-dot-3 {
+    animation: none;
+  }
 }
 
 .calendar-widget .react-calendar {
@@ -59,3 +108,4 @@ body {
   background-color: #111827;
   color: #ffffff;
 }
+

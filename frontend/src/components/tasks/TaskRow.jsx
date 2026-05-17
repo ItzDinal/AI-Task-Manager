@@ -6,7 +6,7 @@ import TaskStatusBadge from "./TaskStatusBadge.jsx";
 function TaskRow({ task, variant = "table" }) {
   if (variant === "card") {
     return (
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all duration-200 hover:bg-gray-100">
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 transition-all duration-200 ease-in-out motion-safe:transform-gpu motion-safe:hover:-translate-y-0.5 hover:bg-gray-100">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <input type="checkbox" className="mt-1 h-4 w-4 rounded border-gray-300 text-black" />
@@ -46,7 +46,7 @@ function TaskRow({ task, variant = "table" }) {
 
   return (
     <tr>
-      <td className="rounded-l-xl bg-gray-50 px-4 py-4 align-middle transition-all duration-200 hover:bg-gray-100">
+      <td className="rounded-l-xl bg-gray-50 px-4 py-4 align-middle transition-all duration-200 ease-in-out hover:bg-gray-100">
         <div className="flex items-start gap-3">
           <input type="checkbox" className="mt-1 h-4 w-4 rounded border-gray-300 text-black" />
           <div>
@@ -55,15 +55,15 @@ function TaskRow({ task, variant = "table" }) {
           </div>
         </div>
       </td>
-      <td className="bg-gray-50 px-4 py-4 align-middle text-sm text-gray-600 transition-all duration-200 hover:bg-gray-100">{task.dueDate}</td>
-      <td className="bg-gray-50 px-4 py-4 align-middle transition-all duration-200 hover:bg-gray-100">
+      <td className="bg-gray-50 px-4 py-4 align-middle text-sm text-gray-600 transition-all duration-200 ease-in-out hover:bg-gray-100">{task.dueDate}</td>
+      <td className="bg-gray-50 px-4 py-4 align-middle transition-all duration-200 ease-in-out hover:bg-gray-100">
         <TaskPriorityBadge priority={task.priority} />
       </td>
-      <td className="bg-gray-50 px-4 py-4 align-middle transition-all duration-200 hover:bg-gray-100">
+      <td className="bg-gray-50 px-4 py-4 align-middle transition-all duration-200 ease-in-out hover:bg-gray-100">
         <TaskStatusBadge status={task.status} />
       </td>
-      <td className="bg-gray-50 px-4 py-4 align-middle text-sm text-gray-600 transition-all duration-200 hover:bg-gray-100">{task.assignee}</td>
-      <td className="rounded-r-xl bg-gray-50 px-4 py-4 align-middle transition-all duration-200 hover:bg-gray-100">
+      <td className="bg-gray-50 px-4 py-4 align-middle text-sm text-gray-600 transition-all duration-200 ease-in-out hover:bg-gray-100">{task.assignee}</td>
+      <td className="rounded-r-xl bg-gray-50 px-4 py-4 align-middle transition-all duration-200 ease-in-out hover:bg-gray-100">
         <TaskActions />
       </td>
     </tr>
