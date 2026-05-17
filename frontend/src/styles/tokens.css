@@ -1,0 +1,4 @@
+﻿/* Shared design tokens and CSS custom properties for scalable theming. */
+:root {
+  --app-radius-md: 0.5rem;
+}
