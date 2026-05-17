@@ -1,6 +1,61 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 body {
   background-color: #f9fafb;
   color: #111827;
+}
+
+.calendar-widget .react-calendar {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+}
+
+.calendar-widget .react-calendar__month-view__weekdays {
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  color: #9ca3af;
+}
+
+.calendar-widget .react-calendar__month-view__weekdays__weekday {
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.calendar-widget .react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+.calendar-widget .react-calendar__tile {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: #374151;
+  transition: all 200ms ease;
+  padding: 0.25rem;
+}
+
+.calendar-widget .react-calendar__tile:enabled:hover,
+.calendar-widget .react-calendar__tile:enabled:focus {
+  background-color: #f3f4f6;
+}
+
+.calendar-widget .react-calendar__tile--active,
+.calendar-widget .react-calendar__tile--now {
+  background: transparent;
+}
+
+.calendar-widget .calendar-tile-default {
+  color: #374151;
+}
+
+.calendar-widget .calendar-tile-muted {
+  color: #d1d5db;
+}
+
+.calendar-widget .calendar-tile-selected {
+  background-color: #111827;
+  color: #ffffff;
 }

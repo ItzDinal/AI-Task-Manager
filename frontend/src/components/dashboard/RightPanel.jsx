@@ -1,8 +1,16 @@
-﻿// Right-side dashboard widget panel placeholder.
+﻿import AIAssistantWidget from "../ai/AIAssistantWidget.jsx";
+import MiniCalendar from "../calendar/MiniCalendar.jsx";
+import TopPriorityTasks from "../widgets/TopPriorityTasks.jsx";
+import UpcomingTasks from "../widgets/UpcomingTasks.jsx";
+
+// Right-side dashboard widget panel.
 function RightPanel() {
   return (
-    <aside className="min-h-[420px] rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="h-full rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Right Panel</div>
+    <aside className="min-h-[420px] space-y-4">
+      <MiniCalendar />
+      <UpcomingTasks />
+      <TopPriorityTasks />
+      <AIAssistantWidget />
     </aside>
   );
 }
