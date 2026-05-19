@@ -5,7 +5,7 @@ from sqlalchemy import String, Boolean, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
+from app.db.base import BaseModel
 from app.models.enums import UserRole
 
 
@@ -60,12 +60,4 @@ class User(BaseModel):
         Enum(UserRole, name="user_role"),
         default=UserRole.USER,
         nullable=False
-    )
-
-    # Future relationship (Tasks)
-    tasks: Mapped[List["Task"]] = relationship(
-        "Task",
-        back_populates="owner",
-        cascade="all, delete-orphan",
-        lazy="selectin"
     )
