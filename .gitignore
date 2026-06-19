@@ -1,0 +1,52 @@
+# Python cache/bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+backend/venv/
+frontend/venv/
+
+# Environment variables
+.env
+.env.*
+backend/.env
+frontend/.env
+
+# Build/distribution artifacts
+build/
+dist/
+*.egg-info/
+frontend/dist/
+frontend/build/
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Alembic/generated files
+backend/alembic_temp/
+backend/app/alembic/__pycache__/
+backend/app/alembic/*.pyc
+
+# Frontend dependencies
+frontend/node_modules/
+
+# Local tooling
+.tools/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
