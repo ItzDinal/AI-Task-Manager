@@ -1,16 +1,10 @@
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import MetaData
+"""Compatibility re-exports for legacy imports.
 
-# Naming convention for Alembic (important later)
-convention = {
-    "ix": "ix_%(column_0_label)s",
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_%(constraint_name)s",
-    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s"
-}
+The authoritative declarative base lives in ``app.db.base``. This module stays
+as a thin alias so older imports can be migrated incrementally without creating
+a second metadata registry.
+"""
 
-metadata = MetaData(naming_convention=convention)
+from app.db.base import Base, convention
 
-class BaseModel(DeclarativeBase):
-    metadata = metadata
+__all__ = ["Base", "convention"]

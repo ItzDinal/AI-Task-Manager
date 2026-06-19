@@ -1,25 +1,18 @@
-import uuid
 from datetime import time
 from typing import Optional, List
 
 from sqlalchemy import String, Boolean, Enum, Time
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
+from app.db.base import Base
 from app.models.enums import UserRole
+from app.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 
-class User(BaseModel):
+class User(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     """User model for authentication system."""
 
     __tablename__ = "users"
-
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
-    )
 
     email: Mapped[str] = mapped_column(
         String(255),

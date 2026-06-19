@@ -16,12 +16,6 @@ AsyncSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False
 )
-<<<<<<< Updated upstream
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
-=======
-
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
@@ -30,4 +24,3 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def close_db() -> None:
     await engine.dispose()
->>>>>>> Stashed changes

@@ -18,7 +18,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel
+from app.db.base import Base
+from app.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDMixin
 
 STATUS_PENDING = "pending"
 STATUS_IN_PROGRESS = "in_progress"
@@ -30,14 +31,8 @@ ALLOWED_STATUSES = [
     STATUS_COMPLETED
 ]
 
-class Task(BaseModel):
+class Task(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "tasks"
-
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
-    )
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

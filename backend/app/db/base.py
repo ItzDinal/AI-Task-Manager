@@ -1,8 +1,5 @@
-from datetime import datetime, timezone
-from typing import Any
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import MetaData, DateTime
-from sqlalchemy.sql import func
+from sqlalchemy import MetaData
+from sqlalchemy.orm import DeclarativeBase
 
 # Naming convention for constraints (important for Alembic)
 convention = {
@@ -14,32 +11,10 @@ convention = {
 }
 
 class Base(DeclarativeBase):
-    """Base class for all models."""
+    """Authoritative SQLAlchemy declarative base for the application."""
+
     metadata = MetaData(naming_convention=convention)
 
-class TimestampMixin:
-    """Adds created_at and updated_at fields."""
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False
-    )
-
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False
-    )
-class BaseModel(Base, TimestampMixin):
-    """Abstract base model with timestamps."""
-
-    __abstract__ = True
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}(id={getattr(self, 'id', None)})>"
-
-    def __str__(self) -> str:
-        return self.__repr__()
+__all__ = ["Base", "convention"]
 
