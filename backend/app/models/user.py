@@ -1,18 +1,42 @@
-from datetime import time
+import uuid
 from typing import Optional, List
 
-from sqlalchemy import String, Boolean, Enum, Time
+from sqlalchemy import String, Boolean, Enum
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.enums import UserRole
-from app.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDMixin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.category import Category
+    from app.models.project import Project
+    from app.models.task import Task
+    from app.models.tag import Tag
+from app.models.mixins import (
+    UUIDMixin,
+    TimestampMixin,
+    SoftDeleteMixin
+)
+from typing import List
 
 
-class User(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
+
+class User(
+    Base,
+    UUIDMixin,
+    TimestampMixin,
+    SoftDeleteMixin):
     """User model for authentication system."""
 
     __tablename__ = "users"
+
+    # id: Mapped[uuid.UUID] = mapped_column(
+    #     UUID(as_uuid=True),
+    #     primary_key=True,
+    #     default=uuid.uuid4
+    # )
 
     email: Mapped[str] = mapped_column(
         String(255),
@@ -56,24 +80,23 @@ class User(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         nullable=False
     )
 
-    # ---------------------------
-    # 🧠 TIME PREFERENCE (NEW)
-    # ---------------------------
-    preferred_start_time: Mapped[Optional[time]] = mapped_column(
-        Time,
-        nullable=True
+    projects: Mapped[List["Project"]] = relationship(
+        "Project",
+        back_populates="owner",
+        cascade="all, delete-orphan"
     )
-
-    preferred_end_time: Mapped[Optional[time]] = mapped_column(
-        Time,
-        nullable=True
+    categories: Mapped[List["Category"]] = relationship(
+        "Category",
+        back_populates="owner",
+        cascade="all, delete-orphan"
     )
-
-    # ---------------------------
-    # 🔗 RELATIONSHIPS
-    # ---------------------------
     tasks: Mapped[List["Task"]] = relationship(
         "Task",
         back_populates="user",
-        cascade="all, delete"
+        cascade="all, delete-orphan"
+    )
+    tags: Mapped[List["Tag"]] = relationship(
+        "Tag",
+        back_populates="owner",
+        cascade="all, delete-orphan"
     )

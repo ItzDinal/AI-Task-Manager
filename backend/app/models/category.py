@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import List
 
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
@@ -7,26 +7,23 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from app.models.mixins import UUIDMixin, TimestampMixin, SoftDeleteMixin
 
-if TYPE_CHECKING:
-    from app.models.user import User
 
-
-class Tag(
+class Category(
     Base,
     UUIDMixin,
     TimestampMixin,
     SoftDeleteMixin
 ):
-    __tablename__ = "tags"
+    __tablename__ = "categories"
 
     name: Mapped[str] = mapped_column(
-        String(50),
+        String(100),
         nullable=False
     )
 
     color: Mapped[str] = mapped_column(
         String(7),
-        default="#8B5CF6"
+        default="#10B981"
     )
 
     user_id: Mapped[UUID] = mapped_column(
@@ -37,5 +34,10 @@ class Tag(
 
     owner: Mapped["User"] = relationship(
         "User",
-        back_populates="tags"
+        back_populates="categories"
     )
+
+    # tasks: Mapped[List["Task"]] = relationship(
+    #     "Task",
+    #     back_populates="category"
+    # )

@@ -1,5 +1,8 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
+# from app.models.user import User
+# from app.models.project import Project
+# from app.models.category import Category
 
 # Naming convention for constraints (important for Alembic)
 convention = {
