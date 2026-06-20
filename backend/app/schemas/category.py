@@ -3,58 +3,59 @@ from uuid import UUID
 
 from pydantic import Field, field_validator
 
-from app.schemas.common import SchemaBase, TimestampResponse
+from app.schemas.common import TimestampResponse, SchemaBase
 
 
-class TagCreate(SchemaBase):
-    """Schema used when creating a tag."""
+class CategoryCreate(SchemaBase):
+    """Schema used when creating a category."""
 
     name: str = Field(
         ...,
         min_length=1,
         max_length=100,
-        examples=["backend"],
+        examples=["Work"]
     )
 
     color: str = Field(
-        default="#8B5CF6",
+        default="#10B981",
         pattern=r"^#[0-9A-Fa-f]{6}$",
-        examples=["#8B5CF6"],
+        examples=["#10B981"]
     )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: str) -> str:
         if not value.strip():
-            raise ValueError("Tag name cannot be empty")
+            raise ValueError("Category name cannot be empty")
         return value.strip()
 
 
-class TagUpdate(SchemaBase):
-    """Schema used when partially updating a tag."""
+class CategoryUpdate(SchemaBase):
+    """Schema used when partially updating a category."""
 
     name: Optional[str] = Field(
         default=None,
         min_length=1,
-        max_length=100,
+        max_length=100
     )
 
     color: Optional[str] = Field(
         default=None,
-        pattern=r"^#[0-9A-Fa-f]{6}$",
+        pattern=r"^#[0-9A-Fa-f]{6}$"
     )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, value: Optional[str]) -> Optional[str]:
         if value is not None and not value.strip():
-            raise ValueError("Tag name cannot be empty")
+            raise ValueError("Category name cannot be empty")
         return value.strip() if value is not None else value
 
 
-class TagResponse(TimestampResponse):
-    """Schema returned from tag API endpoints."""
+class CategoryResponse(TimestampResponse):
+    """Schema returned from category API endpoints."""
 
     name: str
     color: str
     user_id: UUID
+    
