@@ -1,14 +1,16 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.mixins import UUIDMixin, TimestampMixin, SoftDeleteMixin
+from app.models.task_tag import task_tags
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.task import Task
 
 
 class Tag(
@@ -37,5 +39,10 @@ class Tag(
 
     owner: Mapped["User"] = relationship(
         "User",
+        back_populates="tags"
+    )
+    tasks: Mapped[List["Task"]] = relationship(
+        "Task",
+        secondary=task_tags,
         back_populates="tags"
     )

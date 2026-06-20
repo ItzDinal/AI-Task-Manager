@@ -4,6 +4,7 @@ from app.models.project import Project
 from app.models.category import Category
 from app.models.task import Task
 from app.models.tag import Tag
+from app.models.task_tag import task_tags
 
 __all__ = [
     "UserRole",
@@ -11,5 +12,6 @@ __all__ = [
     "Project",
     "Category",
     "Task",
-    "Tag"
+    "Tag",
+    "task_tags"
     ]

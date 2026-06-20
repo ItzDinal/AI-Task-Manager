@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import (
     String,
@@ -30,7 +30,7 @@ from app.models.task_enums import (
     TaskStatus,
     TaskPriority
 )
-
+from app.models.task_tag import task_tags
 
 class Task(
     Base,
@@ -189,6 +189,12 @@ class Task(
     subtasks = relationship(
         "Task",
         back_populates="parent_task"
+    )
+
+    tags: Mapped[List["Tag"]] = relationship(
+        "Tag",
+        secondary=task_tags,
+        back_populates="tasks"
     )
 
     # -------------------------
