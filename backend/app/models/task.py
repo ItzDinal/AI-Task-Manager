@@ -5,78 +5,129 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
-    String, 
-    Text, 
-    DateTime, 
-    ForeignKey, 
-    Integer, 
-    Enum, 
-    CheckConstraint, 
-    Boolean
+    String,
+    Text,
+    Integer,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Enum,
+    Index,
+    CheckConstraint
 )
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDMixin
+from app.models.mixins import (
+    UUIDMixin,
+    TimestampMixin,
+    SoftDeleteMixin
+)
 
-STATUS_PENDING = "pending"
-STATUS_IN_PROGRESS = "in_progress"
-STATUS_COMPLETED = "completed"
+from app.models.task_enums import (
+    TaskStatus,
+    TaskPriority
+)
 
-ALLOWED_STATUSES = [
-    STATUS_PENDING,
-    STATUS_IN_PROGRESS,
-    STATUS_COMPLETED
-]
 
-class Task(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
+class Task(
+    Base,
+    UUIDMixin,
+    TimestampMixin,
+    SoftDeleteMixin
+):
     __tablename__ = "tasks"
 
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # -------------------------
+    # Basic Information
+    # -------------------------
 
-    status: Mapped[str] = mapped_column(
-        Enum(*ALLOWED_STATUSES, name="task_status"),
-        default=STATUS_PENDING,
+    title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    description: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    # -------------------------
+    # Status & Priority
+    # -------------------------
+
+    status: Mapped[TaskStatus] = mapped_column(
+        Enum(TaskStatus, name="task_status"),
+        default=TaskStatus.PENDING,
         nullable=False,
         index=True
     )
 
-    priority: Mapped[str] = mapped_column(
-        String(50),
-        default="medium",
-        nullable=False
+    priority: Mapped[TaskPriority] = mapped_column(
+        Enum(TaskPriority, name="task_priority"),
+        default=TaskPriority.MEDIUM,
+        nullable=False,
+        index=True
     )
 
-    priority_score: Mapped[int] = mapped_column(
+    # -------------------------
+    # Time Tracking
+    # -------------------------
+
+    due_date: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True
+    )
+
+    estimated_time: Mapped[int] = mapped_column(
         Integer,
         default=0,
         nullable=False
     )
 
-    # ---------------------------
-    # TIME & SCHEDULING
-    # ---------------------------
-    due_date: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, 
-        nullable=True,
-        index=True)
-
-    estimated_time: Mapped[Optional[int]] = mapped_column(
+    actual_time_spent: Mapped[int] = mapped_column(
         Integer,
-        nullable=True
-    )  # minutes
+        default=0,
+        nullable=False
+    )
 
-    scheduled_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime,
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         nullable=True
     )
 
-    # ---------------------------
-    # 🔐 USER OWNERSHIP (CRITICAL)
-    # ---------------------------
+    # -------------------------
+    # Ordering
+    # -------------------------
+
+    position: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False
+    )
+
+    # -------------------------
+    # Recurring Tasks
+    # -------------------------
+
+    is_recurring: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+
+    recurrence_rule: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True
+    )
+
+    # -------------------------
+    # User Relationship
+    # -------------------------
+
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -84,16 +135,86 @@ class Task(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         index=True
     )
 
-     # Relationship
-    user = relationship("User", back_populates="tasks")
+    owner = relationship(
+        "User",
+        back_populates="tasks"
+    )
 
-     # ---------------------------
-    # CONSTRAINTS (DATA SAFETY)
-    # ---------------------------
+    # -------------------------
+    # Project Relationship
+    # -------------------------
+
+    project_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="SET NULL"),
+        nullable=True
+    )
+
+    project = relationship(
+        "Project",
+        back_populates="tasks"
+    )
+
+    # -------------------------
+    # Category Relationship
+    # -------------------------
+
+    category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("categories.id", ondelete="SET NULL"),
+        nullable=True
+    )
+
+    category = relationship(
+        "Category",
+        back_populates="tasks"
+    )
+
+    # -------------------------
+    # Subtasks
+    # -------------------------
+
+    parent_task_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tasks.id", ondelete="CASCADE"),
+        nullable=True
+    )
+
+    parent_task = relationship(
+        "Task",
+        remote_side="Task.id",
+        back_populates="subtasks"
+    )
+
+    subtasks = relationship(
+        "Task",
+        back_populates="parent_task"
+    )
+
+    # -------------------------
+    # Constraints
+    # -------------------------
+
     __table_args__ = (
         CheckConstraint(
             "estimated_time >= 0",
             name="check_estimated_time_positive"
         ),
+        CheckConstraint(
+            "actual_time_spent >= 0",
+            name="check_actual_time_positive"
+        ),
+        Index(
+            "idx_task_user_status",
+            "user_id",
+            "status"
+        ),
+        Index(
+            "idx_task_due_date",
+            "due_date"
+        ),
+        Index(
+            "idx_task_priority",
+            "priority"
+        ),
     )
-    

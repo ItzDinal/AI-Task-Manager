@@ -37,7 +37,7 @@ class Category(
         back_populates="categories"
     )
 
-    # tasks: Mapped[List["Task"]] = relationship(
-    #     "Task",
-    #     back_populates="category"
-    # )
+    tasks: Mapped[List["Task"]] = relationship(
+        "Task",
+        back_populates="category"
+    )
